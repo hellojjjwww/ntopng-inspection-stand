@@ -11,7 +11,25 @@
 - `nginx/default.conf.template` - закрытие ntopng за Basic Auth.
 - `scripts/generate_anomaly.py` - генератор SYN-flood, DNS-туннельных запросов и oversized ICMP через scapy.
 - `scripts/prepare_htpasswd.py` - создание файла Basic Auth без внешних утилит.
+- `install.sh` - установка стенда на Ubuntu LTS одной командой.
+- `docs/ARCHITECTURE.md` - архитектура NDR/DPI и план развития.
 - `docs/OPERATIONS.md` - порядок настройки алертов, GeoIP, хранения flows и проверки стенда.
+
+## Установка одной командой
+
+На чистой Ubuntu LTS:
+
+```bash
+sudo bash <(curl -Ls https://raw.githubusercontent.com/hellojjjwww/ntopng-inspection-stand/main/install.sh)
+```
+
+Настраиваемые переменные:
+
+```bash
+sudo CAPTURE_INTERFACE=ens18 NGINX_LISTEN_PORT=8088 NGINX_BASIC_USER=admin bash <(curl -Ls https://raw.githubusercontent.com/hellojjjwww/ntopng-inspection-stand/main/install.sh)
+```
+
+Если `NGINX_BASIC_PASSWORD` не задан, установщик сам сгенерирует пароль и покажет его в конце.
 
 ## Быстрый запуск
 
@@ -55,7 +73,7 @@
 
    - URL: `http://<linux-host>:8088/`
    - Basic Auth: значения из `.env`
-   - Первый вход ntopng: `admin` / `admin`, затем ntopng попросит сменить пароль.
+   - Встроенный логин ntopng отключён, потому что доступ уже защищён Nginx Basic Auth.
 
 ## GeoLite2
 
