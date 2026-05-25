@@ -29,16 +29,18 @@ services:
       NTOPNG_MAX_NUM_FLOWS: ${NTOPNG_MAX_NUM_FLOWS:-200000}
       NTOPNG_MAX_NUM_HOSTS: ${NTOPNG_MAX_NUM_HOSTS:-25000}
     command:
-      - /bin/sh
-      - -c
-      - |
-        exec ntopng \
-          /etc/ntopng/ntopng.conf \
-          --community \
-          --interface "$${CAPTURE_INTERFACE}" \
-          --local-networks "$${LOCAL_NETWORKS}" \
-          --max-num-flows "$${NTOPNG_MAX_NUM_FLOWS}" \
-          --max-num-hosts "$${NTOPNG_MAX_NUM_HOSTS}"
+      - /etc/ntopng/ntopng.conf
+      - --community
+      - --disable-login
+      - "1"
+      - --interface
+      - ${CAPTURE_INTERFACE:-eth0}
+      - --local-networks
+      - ${LOCAL_NETWORKS:-192.168.0.0/16,10.0.0.0/8,172.16.0.0/12}
+      - --max-num-flows
+      - ${NTOPNG_MAX_NUM_FLOWS:-200000}
+      - --max-num-hosts
+      - ${NTOPNG_MAX_NUM_HOSTS:-25000}
     volumes:
       - ./ntopng/ntopng.conf:/etc/ntopng/ntopng.conf:ro
       - ./geoip:/usr/share/GeoIP:ro
