@@ -1,0 +1,6 @@
+.env
+nginx/.htpasswd
+.venv/
+__pycache__/
+*.pyc
+backups/

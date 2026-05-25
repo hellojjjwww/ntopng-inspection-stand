@@ -1,0 +1,21 @@
+services:
+  ntopng:
+    command:
+      - /bin/sh
+      - -c
+      - |
+        exec ntopng \
+          /etc/ntopng/ntopng.conf \
+          --community \
+          --http-port "0.0.0.0:3000" \
+          --interface "$${CAPTURE_INTERFACE}" \
+          --local-networks "$${LOCAL_NETWORKS}" \
+          --max-num-flows "$${NTOPNG_MAX_NUM_FLOWS}" \
+          --max-num-hosts "$${NTOPNG_MAX_NUM_HOSTS}"
+
+  nginx:
+    network_mode: bridge
+    environment:
+      NTOPNG_UPSTREAM: 172.17.0.1:3000
+    ports:
+      - "${NGINX_LISTEN_PORT:-8088}:${NGINX_LISTEN_PORT:-8088}"
