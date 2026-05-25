@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Generate lab-only anomalous packets for ntopng alert validation."""
+"""Generate lab-only anomalous packets for ntopng alert validation.
+
+File: generate_anomaly.py
+Version: 1.1.0
+License: MIT
+"""
 
 from __future__ import annotations
 

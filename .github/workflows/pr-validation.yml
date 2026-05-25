@@ -1,0 +1,25 @@
+name: PR validation
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate Compose
+        run: docker compose -f deploy/docker-compose.yml config --quiet
+
+      - name: Validate Bash syntax
+        run: |
+          bash -n install.sh
+          bash -n deploy/scripts/tests/validate_stack.sh
+
+      - name: Validate Python syntax
+        run: python3 -m py_compile scripts/generate_anomaly.py scripts/prepare_htpasswd.py

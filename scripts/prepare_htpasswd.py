@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Create nginx/.htpasswd from .env without depending on apache2-utils."""
+"""Create config/nginx/.htpasswd from .env without external utilities.
+
+File: prepare_htpasswd.py
+Version: 1.1.0
+License: MIT
+"""
 
 from __future__ import annotations
 
@@ -11,7 +16,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 ENV_FILE = ROOT / ".env"
-HTPASSWD_FILE = ROOT / "nginx" / ".htpasswd"
+HTPASSWD_FILE = ROOT / "config" / "nginx" / ".htpasswd"
 
 
 def load_env() -> dict[str, str]:
@@ -82,7 +87,7 @@ def main() -> None:
     password = values.get("NGINX_BASIC_PASSWORD") or os.environ.get("NGINX_BASIC_PASSWORD") or "change-me-now"
 
     if password == "change-me-now":
-        raise SystemExit("Change NGINX_BASIC_PASSWORD in .env before creating nginx/.htpasswd")
+        raise SystemExit("Change NGINX_BASIC_PASSWORD in .env before creating config/nginx/.htpasswd")
 
     HTPASSWD_FILE.parent.mkdir(parents=True, exist_ok=True)
     HTPASSWD_FILE.write_text(f"{user}:{apr1_hash(password)}\n", encoding="utf-8")

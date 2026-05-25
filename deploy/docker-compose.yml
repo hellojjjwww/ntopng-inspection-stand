@@ -18,7 +18,7 @@ services:
       retries: 5
       start_period: 10s
     volumes:
-      - ./config/redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
+      - ../config/redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
       - redis-data:/data
 
   ntopng:
@@ -59,8 +59,8 @@ services:
       retries: 10
       start_period: 30s
     volumes:
-      - ./config/ntopng/ntopng.conf:/etc/ntopng/ntopng.conf:ro
-      - ./geoip:/usr/share/GeoIP:ro
+      - ../config/ntopng/ntopng.conf:/etc/ntopng/ntopng.conf:ro
+      - ../geoip:/usr/share/GeoIP:ro
       - ntopng-data:/var/lib/ntopng
 
   nginx:
@@ -91,8 +91,8 @@ services:
       retries: 5
       start_period: 10s
     volumes:
-      - ./config/nginx/default.conf.template:/etc/nginx/templates/default.conf.template:ro
-      - ./config/nginx/.htpasswd:/etc/nginx/.htpasswd:ro
+      - ../config/nginx/default.conf.template:/etc/nginx/templates/default.conf.template:ro
+      - ../config/nginx/.htpasswd:/etc/nginx/.htpasswd:ro
 
 volumes:
   redis-data:

@@ -1,4 +1,14 @@
 #!/usr/bin/env bash
+# @file install.sh
+# @brief Bootstrap script for deploying the ntopng traffic inspection stand on Ubuntu LTS.
+# @details
+#   1. Validates the target operating system.
+#   2. Installs Docker Engine and Docker Compose plugin when missing.
+#   3. Downloads project configuration from the Git repository.
+#   4. Generates local runtime secrets outside Git.
+#   5. Enables a restrictive UFW policy and starts the container stack.
+# @version 1.1.0
+# @license MIT
 set -Eeuo pipefail
 
 REPO_RAW="${REPO_RAW:-https://raw.githubusercontent.com/hellojjjwww/ntopng-inspection-stand/main}"
@@ -74,6 +84,16 @@ EOF
   systemctl enable --now docker
 }
 
+configure_firewall() {
+  log "Configuring UFW firewall policy."
+  apt-get install -y ufw
+  ufw default deny incoming
+  ufw default allow outgoing
+  ufw allow OpenSSH || true
+  ufw allow "${NGINX_LISTEN_PORT}/tcp"
+  ufw --force enable
+}
+
 detect_interface() {
   if [[ -n "${CAPTURE_INTERFACE}" ]]; then
     return
@@ -94,22 +114,28 @@ generate_password() {
 
 fetch_project_files() {
   log "Installing project files into ${INSTALL_DIR}."
-  install -d "${INSTALL_DIR}/ntopng" "${INSTALL_DIR}/redis" "${INSTALL_DIR}/nginx" \
-    "${INSTALL_DIR}/geoip" "${INSTALL_DIR}/scripts" "${INSTALL_DIR}/tests" "${INSTALL_DIR}/docs"
+  install -d "${INSTALL_DIR}/config/ntopng" "${INSTALL_DIR}/config/redis" "${INSTALL_DIR}/config/nginx" \
+    "${INSTALL_DIR}/deploy/scripts/tests" "${INSTALL_DIR}/geoip" "${INSTALL_DIR}/scripts" \
+    "${INSTALL_DIR}/tests" "${INSTALL_DIR}/docs" "${INSTALL_DIR}/.github/workflows"
 
   local files=(
-    "docker-compose.yml"
+    "deploy/docker-compose.yml"
     ".env.example"
     ".gitignore"
     "README.md"
-    "ntopng/ntopng.conf"
-    "redis/redis.conf"
-    "nginx/default.conf.template"
+    "LICENSE.txt"
+    "config/ntopng/ntopng.conf"
+    "config/redis/redis.conf"
+    "config/nginx/default.conf.template"
     "scripts/generate_anomaly.py"
     "scripts/prepare_htpasswd.py"
     "tests/requirements.txt"
-    "docs/OPERATIONS.md"
-    "docs/ARCHITECTURE.md"
+    "deploy/scripts/tests/validate_stack.sh"
+    ".github/workflows/pr-validation.yml"
+    "docs/operations.md"
+    "docs/architecture.md"
+    "docs/deployment.md"
+    "docs/testing.md"
   )
 
   local file
@@ -132,14 +158,14 @@ EOF
 
   local password_hash
   password_hash="$(openssl passwd -apr1 "${NGINX_BASIC_PASSWORD}")"
-  printf '%s:%s\n' "${NGINX_BASIC_USER}" "${password_hash}" >"${INSTALL_DIR}/nginx/.htpasswd"
-  chmod 600 "${INSTALL_DIR}/.env" "${INSTALL_DIR}/nginx/.htpasswd"
+  printf '%s:%s\n' "${NGINX_BASIC_USER}" "${password_hash}" >"${INSTALL_DIR}/config/nginx/.htpasswd"
+  chmod 600 "${INSTALL_DIR}/.env" "${INSTALL_DIR}/config/nginx/.htpasswd"
 }
 
 start_stack() {
   log "Starting containers."
   cd "${INSTALL_DIR}"
-  docker compose up -d
+  docker compose -f deploy/docker-compose.yml up -d
 }
 
 print_summary() {
@@ -160,9 +186,9 @@ Basic Auth:
 
 Useful commands:
   cd ${INSTALL_DIR}
-  docker compose ps
-  docker compose logs -f ntopng
-  docker compose restart
+  docker compose -f deploy/docker-compose.yml ps
+  docker compose -f deploy/docker-compose.yml logs -f ntopng
+  docker compose -f deploy/docker-compose.yml restart
 
 Notes:
   ntopng's own login is disabled. Nginx Basic Auth is the access boundary.
@@ -178,6 +204,7 @@ main() {
   generate_password
   fetch_project_files
   write_runtime_config
+  configure_firewall
   start_stack
   print_summary
 }

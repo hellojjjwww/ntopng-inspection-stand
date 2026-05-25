@@ -1,19 +1,31 @@
 # Стенд глубокого мониторинга сетевого трафика: ntopng / Redis / Nginx
 
-Проект поднимает лабораторный стенд сетевой инспекции на базе `ntopng` с DPI через nDPI, Redis для кэша и настроек, reverse-proxy Nginx с Basic Auth, подготовкой GeoLite2 и Python-тестом на `scapy` для генерации аномального трафика.
+Проект разворачивает стенд сетевой инспекции на базе `ntopng` с DPI через nDPI, Redis для кэша и настроек, reverse-proxy Nginx с Basic Auth, подготовкой GeoLite2 и Python-тестом на `scapy` для генерации аномального трафика.
 
-> Практическое замечание: захват реального трафика из контейнера через `network_mode: host` корректно работает на Linux-хосте. В Docker Desktop на Windows/macOS контейнер видит сеть VM, а не физические интерфейсы машины.
+Захват реального трафика из контейнера через `network_mode: host` корректно работает на Linux-хосте. В Docker Desktop на Windows/macOS контейнер видит сеть виртуальной машины Docker Desktop, а не физические интерфейсы хоста.
 
 ## Состав
 
-- `docker-compose.yml` - Redis, ntopng, Nginx reverse-proxy.
-- `ntopng/ntopng.conf` - базовая конфигурация ntopng для захвата, DPI и локального web-интерфейса.
-- `nginx/default.conf.template` - закрытие ntopng за Basic Auth.
-- `scripts/generate_anomaly.py` - генератор SYN-flood, DNS-туннельных запросов и oversized ICMP через scapy.
-- `scripts/prepare_htpasswd.py` - создание файла Basic Auth без внешних утилит.
+- `deploy/docker-compose.yml` - Redis, ntopng, Nginx reverse-proxy.
+- `config/ntopng/ntopng.conf` - базовая конфигурация ntopng.
+- `config/nginx/default.conf.template` - reverse-proxy с Basic Auth.
+- `config/redis/redis.conf` - конфигурация Redis.
 - `install.sh` - установка стенда на Ubuntu LTS одной командой.
-- `docs/ARCHITECTURE.md` - архитектура NDR/DPI и план развития.
-- `docs/OPERATIONS.md` - порядок настройки алертов, GeoIP, хранения flows и проверки стенда.
+- `scripts/generate_anomaly.py` - генератор SYN-flood, DNS-туннельных запросов и oversized ICMP.
+- `scripts/prepare_htpasswd.py` - создание файла Basic Auth.
+- `deploy/scripts/tests/validate_stack.sh` - интеграционная проверка запущенного стенда.
+- `docs/architecture.md` - архитектура NDR/DPI.
+- `docs/deployment.md` - инструкция развертывания.
+- `docs/testing.md` - методика проверки.
+- `docs/operations.md` - эксплуатационные процедуры.
+
+## Роли
+
+| Роль | Зона ответственности |
+| --- | --- |
+| DevOps/IaC Engineer | Docker Compose, установщик, структура репозитория, автоматизация развертывания |
+| System Administrator / SRE | Nginx, Redis, healthcheck-и, эксплуатационные процедуры |
+| Observability and Security Engineer | ntopng, DPI, алерты, тесты аномального трафика, документация мониторинга |
 
 ## Установка одной командой
 
@@ -23,57 +35,69 @@
 sudo bash <(curl -Ls https://raw.githubusercontent.com/hellojjjwww/ntopng-inspection-stand/main/install.sh)
 ```
 
-Настраиваемые переменные:
+С параметрами:
 
 ```bash
-sudo CAPTURE_INTERFACE=ens18 NGINX_LISTEN_PORT=8088 NGINX_BASIC_USER=admin bash <(curl -Ls https://raw.githubusercontent.com/hellojjjwww/ntopng-inspection-stand/main/install.sh)
+sudo CAPTURE_INTERFACE=ens18 \
+  NGINX_LISTEN_PORT=8088 \
+  NGINX_BASIC_USER=admin \
+  bash <(curl -Ls https://raw.githubusercontent.com/hellojjjwww/ntopng-inspection-stand/main/install.sh)
 ```
 
-Если `NGINX_BASIC_PASSWORD` не задан, установщик сам сгенерирует пароль и покажет его в конце.
+Если `NGINX_BASIC_PASSWORD` не задан, установщик сгенерирует пароль и покажет его после запуска.
 
-## Быстрый запуск
+## Ручной запуск
 
-1. Скопируйте пример переменных окружения:
-
-   ```powershell
-   Copy-Item .env.example .env
-   ```
-
-   На Linux:
+1. Скопировать пример переменных окружения:
 
    ```bash
    cp .env.example .env
    ```
 
-2. Отредактируйте `.env`:
+2. Отредактировать `.env`:
 
    - `CAPTURE_INTERFACE` - интерфейс для захвата (`ip link`, `ip addr`, `tcpdump -D`).
    - `LOCAL_NETWORKS` - локальные сети через запятую.
    - `NGINX_BASIC_USER` и `NGINX_BASIC_PASSWORD` - логин и пароль reverse-proxy.
 
-3. Создайте файл Basic Auth:
+3. Создать файл Basic Auth:
 
    ```bash
    python3 scripts/prepare_htpasswd.py
    ```
 
-4. Запустите стенд:
+4. Запустить стенд:
 
    ```bash
-   docker compose up -d
+   docker compose -f deploy/docker-compose.yml up -d
    ```
 
-   В Docker Desktop на Windows используйте override, который пробрасывает Nginx на `localhost:8088`:
+   Docker Desktop на Windows:
 
    ```powershell
-   docker-compose -f docker-compose.yml -f docker-compose.desktop.yml up -d
+   docker-compose -f deploy/docker-compose.yml -f deploy/docker-compose.desktop.yml up -d
    ```
 
-5. Откройте ntopng через proxy:
+5. Открыть ntopng через proxy:
 
    - URL: `http://<linux-host>:8088/`
    - Basic Auth: значения из `.env`
-   - Встроенный логин ntopng отключён, потому что доступ уже защищён Nginx Basic Auth.
+   - встроенный логин ntopng отключен, доступ контролируется Nginx Basic Auth.
+
+## Проверка статуса
+
+```bash
+docker compose -f deploy/docker-compose.yml ps
+docker compose -f deploy/docker-compose.yml logs -f ntopng
+```
+
+Интеграционный тест:
+
+```bash
+NGINX_BASIC_USER=ntopadmin \
+NGINX_BASIC_PASSWORD=<password> \
+deploy/scripts/tests/validate_stack.sh
+```
 
 ## GeoLite2
 
@@ -83,11 +107,9 @@ sudo CAPTURE_INTERFACE=ens18 NGINX_LISTEN_PORT=8088 NGINX_BASIC_USER=admin bash 
 - `GeoLite2-ASN.mmdb`
 - `GeoLite2-Country.mmdb`
 
-Если у вас есть MaxMind license key, можно использовать `geoipupdate` на хосте или добавить отдельный контейнер обновления. Подробнее: [docs/OPERATIONS.md](docs/OPERATIONS.md).
+Подробности приведены в `docs/operations.md`.
 
 ## Проверка аномалий
-
-Установите зависимости теста на машине-генераторе:
 
 ```bash
 python3 -m venv .venv
@@ -103,13 +125,15 @@ sudo python3 scripts/generate_anomaly.py suspicious-dns --resolver 1.1.1.1 --dom
 sudo python3 scripts/generate_anomaly.py oversized-icmp --target 192.0.2.10 --size 3000 --count 5
 ```
 
-Запускайте генератор только в своей лабораторной сети или на адресах, которыми вы управляете.
+Генерация пакетов должна выполняться только в контролируемой лабораторной сети.
+
+## Лицензирование
+
+Исходный код автоматизации и конфигурации распространяются под лицензией MIT. Полный текст указан в `LICENSE.txt`.
 
 ## Источники
 
-Решения в проекте опираются на актуальную документацию ntopng:
-
-- Redis используется ntopng для кэша, настроек и preferences: <https://ntop.org/guides/ntopng/user_interface/system_interface/health/redis.html>
-- Конфигурационный файл и изоляция Redis/портов/data dir для daemon-режима: <https://www.ntop.org/guides/ntopng/how_to_start/running_as_a_daemon.html>
-- Захват трафика через libpcap/PF_RING, включая SPAN/TAP-сценарии: <https://www.ntop.org/ntopng/>
-- Alert engine и threshold-алерты: <https://www.ntop.org/guides/ntopng/basic_concepts/alerts.html>
+- ntopng Redis: <https://ntop.org/guides/ntopng/user_interface/system_interface/health/redis.html>
+- ntopng daemon/config: <https://www.ntop.org/guides/ntopng/how_to_start/running_as_a_daemon.html>
+- ntopng capture: <https://www.ntop.org/ntopng/>
+- ntopng alerts: <https://www.ntop.org/guides/ntopng/basic_concepts/alerts.html>
