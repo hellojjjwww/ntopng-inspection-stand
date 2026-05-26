@@ -54,6 +54,7 @@ Expected services:
 
 - `ntopng-redis`
 - `ntopng`
+- `zeek-sensor`
 - `ntopng-proxy`
 
 ## Access
@@ -63,6 +64,15 @@ http://<host-ip>:8088/
 ```
 
 The web interface is protected by Nginx Basic Auth. The built-in ntopng login is disabled because authentication is delegated to the reverse proxy.
+
+## Zeek Logs
+
+Zeek writes JSON logs to the `zeek-logs` Docker volume:
+
+```bash
+docker compose -f deploy/docker-compose.yml exec zeek ls -lah /var/log/zeek
+docker compose -f deploy/docker-compose.yml exec zeek tail -n 20 /var/log/zeek/conn.log
+```
 
 ## Firewall Policy
 

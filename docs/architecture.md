@@ -16,6 +16,10 @@ ntopng container -> nDPI protocol classification -> flows, hosts, applications, 
         |
         +-> ntopng-data volume: persistent state and time-series
 
+Zeek container -> protocol analyzers -> conn/dns/http/ssl/ssh/notice logs
+        |
+        +-> zeek-logs volume: JSON evidence for incident analysis
+
 user browser -> Nginx Basic Auth -> ntopng web UI
 ```
 
@@ -24,6 +28,7 @@ user browser -> Nginx Basic Auth -> ntopng web UI
 - `ntopng` читает пакеты с интерфейса хоста через `libpcap`. Если PF_RING есть на хосте, ntopng пытается использовать его, иначе откатывается на pcap.
 - `nDPI` внутри ntopng определяет L7-протоколы: HTTP, TLS, DNS, QUIC, SSH и другие.
 - `Redis` хранит кэш, preferences и runtime-состояние ntopng.
+- `Zeek` параллельно анализирует тот же интерфейс и пишет структурированные JSON-логи.
 - `Nginx` закрывает UI через Basic Auth. Встроенный логин ntopng отключён параметром `--disable-login 1`, чтобы не ловить lockout при тестах.
 - `GeoIP` подключается через базы в каталоге `geoip/`.
 - `scripts/generate_anomaly.py` генерирует лабораторные аномалии: SYN flood, аномальные DNS-запросы, oversized ICMP.

@@ -36,6 +36,10 @@ validate_containers() {
     compose ps --format json >/dev/null
 }
 
+validate_zeek_service() {
+    compose ps zeek >/dev/null
+}
+
 validate_unauthenticated_access() {
     local status_code
     status_code="$(curl -sS -o /dev/null -w '%{http_code}' "${BASE_URL}")"
@@ -53,6 +57,7 @@ main() {
     require_command docker
     require_command curl
     validate_containers
+    validate_zeek_service
     validate_unauthenticated_access
     validate_authenticated_access
     printf 'Stack validation completed successfully.\n'

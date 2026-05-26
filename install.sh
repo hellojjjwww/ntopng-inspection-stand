@@ -114,7 +114,8 @@ generate_password() {
 
 fetch_project_files() {
   log "Installing project files into ${INSTALL_DIR}."
-  install -d "${INSTALL_DIR}/config/ntopng" "${INSTALL_DIR}/config/redis" "${INSTALL_DIR}/config/nginx" \
+  install -d "${INSTALL_DIR}/config/ntopng" "${INSTALL_DIR}/config/redis" \
+    "${INSTALL_DIR}/config/nginx" "${INSTALL_DIR}/config/zeek" \
     "${INSTALL_DIR}/deploy/scripts/tests" "${INSTALL_DIR}/geoip" "${INSTALL_DIR}/scripts" \
     "${INSTALL_DIR}/tests" "${INSTALL_DIR}/docs" "${INSTALL_DIR}/.github/workflows"
 
@@ -127,6 +128,7 @@ fetch_project_files() {
     "config/ntopng/ntopng.conf"
     "config/redis/redis.conf"
     "config/nginx/default.conf.template"
+    "config/zeek/local.zeek"
     "scripts/generate_anomaly.py"
     "scripts/prepare_htpasswd.py"
     "tests/requirements.txt"
@@ -188,10 +190,12 @@ Useful commands:
   cd ${INSTALL_DIR}
   docker compose -f deploy/docker-compose.yml ps
   docker compose -f deploy/docker-compose.yml logs -f ntopng
+  docker compose -f deploy/docker-compose.yml logs -f zeek
   docker compose -f deploy/docker-compose.yml restart
 
 Notes:
   ntopng's own login is disabled. Nginx Basic Auth is the access boundary.
+  Zeek writes JSON logs to the zeek-logs Docker volume.
   Capture interface: ${CAPTURE_INTERFACE}
 EOF
 }

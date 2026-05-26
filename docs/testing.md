@@ -35,7 +35,20 @@ Expected results:
 
 - unauthenticated request returns HTTP `401`;
 - authenticated request returns HTTP `200` or `302`;
-- Docker Compose can list the service state.
+- Docker Compose can list the service state;
+- Zeek service exists in the Compose project.
+
+## Zeek Log Validation
+
+After traffic appears on the capture interface:
+
+```bash
+docker compose -f deploy/docker-compose.yml exec zeek ls -lah /var/log/zeek
+docker compose -f deploy/docker-compose.yml exec zeek test -f /var/log/zeek/conn.log
+docker compose -f deploy/docker-compose.yml exec zeek tail -n 5 /var/log/zeek/conn.log
+```
+
+Expected result: `conn.log` contains JSON records with source/destination addresses, ports, protocol and connection state.
 
 ## Traffic Anomaly Tests
 
@@ -83,6 +96,7 @@ Collect service state:
 ```bash
 docker compose -f deploy/docker-compose.yml ps
 docker compose -f deploy/docker-compose.yml logs --tail 200 ntopng
+docker compose -f deploy/docker-compose.yml logs --tail 200 zeek
 docker compose -f deploy/docker-compose.yml logs --tail 200 nginx
 ```
 

@@ -21,5 +21,12 @@ jobs:
           bash -n install.sh
           bash -n deploy/scripts/tests/validate_stack.sh
 
+      - name: Check required files
+        run: |
+          test -f LICENSE.txt
+          test -f config/zeek/local.zeek
+          test -f docs/deployment.md
+          test -f docs/testing.md
+
       - name: Validate Python syntax
         run: python3 -m py_compile scripts/generate_anomaly.py scripts/prepare_htpasswd.py

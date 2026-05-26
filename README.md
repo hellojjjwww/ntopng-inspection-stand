@@ -6,10 +6,11 @@
 
 ## Состав
 
-- `deploy/docker-compose.yml` - Redis, ntopng, Nginx reverse-proxy.
+- `deploy/docker-compose.yml` - Redis, ntopng, Zeek, Nginx reverse-proxy.
 - `config/ntopng/ntopng.conf` - базовая конфигурация ntopng.
 - `config/nginx/default.conf.template` - reverse-proxy с Basic Auth.
 - `config/redis/redis.conf` - конфигурация Redis.
+- `config/zeek/local.zeek` - базовая политика Zeek для JSON-логов.
 - `install.sh` - установка стенда на Ubuntu LTS одной командой.
 - `scripts/generate_anomaly.py` - генератор SYN-flood, DNS-туннельных запросов и oversized ICMP.
 - `scripts/prepare_htpasswd.py` - создание файла Basic Auth.
@@ -89,6 +90,7 @@ sudo CAPTURE_INTERFACE=ens18 \
 ```bash
 docker compose -f deploy/docker-compose.yml ps
 docker compose -f deploy/docker-compose.yml logs -f ntopng
+docker compose -f deploy/docker-compose.yml logs -f zeek
 ```
 
 Интеграционный тест:
@@ -108,6 +110,15 @@ deploy/scripts/tests/validate_stack.sh
 - `GeoLite2-Country.mmdb`
 
 Подробности приведены в `docs/operations.md`.
+
+## Логи Zeek
+
+Zeek пишет структурированные JSON-логи в Docker volume `zeek-logs`. Быстрый просмотр:
+
+```bash
+docker compose -f deploy/docker-compose.yml exec zeek ls -lah /var/log/zeek
+docker compose -f deploy/docker-compose.yml exec zeek tail -n 20 /var/log/zeek/conn.log
+```
 
 ## Проверка аномалий
 
