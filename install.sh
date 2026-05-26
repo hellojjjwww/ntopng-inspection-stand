@@ -131,13 +131,17 @@ fetch_project_files() {
     "config/zeek/local.zeek"
     "scripts/generate_anomaly.py"
     "scripts/prepare_htpasswd.py"
+    "scripts/setup_geolite2.sh"
     "tests/requirements.txt"
     "deploy/scripts/tests/validate_stack.sh"
+    "deploy/scripts/tests/collect_evidence.sh"
     ".github/workflows/pr-validation.yml"
     "docs/operations.md"
     "docs/architecture.md"
     "docs/deployment.md"
     "docs/testing.md"
+    "docs/alerts.md"
+    "docs/demo_scenario.md"
   )
 
   local file

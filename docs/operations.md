@@ -113,9 +113,9 @@ curl -I http://<linux-host>:3000/
 http://<linux-host>:8088/
 ```
 
-## 8. Контрольный сценарий сдачи
+## 8. Контрольный сценарий проверки
 
-1. `docker compose ps` показывает `redis`, `ntopng`, `nginx`.
+1. `docker compose ps` показывает `redis`, `ntopng`, `zeek`, `nginx`.
 2. В ntopng виден live-трафик на выбранном интерфейсе.
 3. На вкладке protocols/applications есть L7-классификация nDPI.
 4. Для внешних IP видны ASN/country/city после установки GeoLite2.

@@ -20,6 +20,8 @@ jobs:
         run: |
           bash -n install.sh
           bash -n deploy/scripts/tests/validate_stack.sh
+          bash -n deploy/scripts/tests/collect_evidence.sh
+          bash -n scripts/setup_geolite2.sh
 
       - name: Check required files
         run: |
@@ -27,6 +29,8 @@ jobs:
           test -f config/zeek/local.zeek
           test -f docs/deployment.md
           test -f docs/testing.md
+          test -f docs/alerts.md
+          test -f docs/demo_scenario.md
 
       - name: Validate Python syntax
-        run: python3 -m py_compile scripts/generate_anomaly.py scripts/prepare_htpasswd.py
+        run: python3 -m py_compile scripts/generate_anomaly.py scripts/prepare_htpasswd.py scripts/build_instruction_pdf.py

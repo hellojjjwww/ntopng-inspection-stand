@@ -5,3 +5,4 @@ config/nginx/.htpasswd
 __pycache__/
 *.pyc
 backups/
+artifacts/
