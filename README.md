@@ -19,6 +19,8 @@
 - `docs/deployment.md` - инструкция развертывания.
 - `docs/testing.md` - методика проверки.
 - `docs/operations.md` - эксплуатационные процедуры.
+- `docs/alerts.md` - базовые политики алертинга.
+- `docs/demo_scenario.md` - практический сценарий демонстрации.
 
 ## Роли
 
@@ -110,6 +112,14 @@ deploy/scripts/tests/validate_stack.sh
 - `GeoLite2-Country.mmdb`
 
 Подробности приведены в `docs/operations.md`.
+
+При наличии MaxMind Account ID и License Key можно использовать helper:
+
+```bash
+sudo MAXMIND_ACCOUNT_ID=<account-id> \
+  MAXMIND_LICENSE_KEY=<license-key> \
+  scripts/setup_geolite2.sh
+```
 
 ## Логи Zeek
 
