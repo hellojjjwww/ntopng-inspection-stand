@@ -60,6 +60,8 @@ services:
       start_period: 30s
     volumes:
       - ../config/ntopng/ntopng.conf:/etc/ntopng/ntopng.conf:ro
+      - ../config/ntopng/locales/ru.lua:/usr/share/ntopng/scripts/locales/ru.lua:ro
+      - ../config/ntopng/locales/ru.lua:/usr/share/ntopng/scripts/locales/it.lua:ro
       - ../geoip:/usr/share/GeoIP:ro
       - ntopng-data:/var/lib/ntopng
 

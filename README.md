@@ -16,6 +16,7 @@
 - `scripts/prepare_htpasswd.py` - создание файла Basic Auth.
 - `scripts/doctor.sh` - диагностика типовых ошибок запуска.
 - `scripts/backup.sh` - резервное копирование конфигурации и Docker volumes.
+- `scripts/enable_russian_ui.sh` - включение дополнительной русской локали ntopng.
 - `Makefile` - короткие команды управления стендом.
 - `deploy/scripts/tests/validate_stack.sh` - интеграционная проверка запущенного стенда.
 - `docs/architecture.md` - архитектура NDR/DPI.
@@ -106,6 +107,7 @@ make up
 make ps
 make logs SERVICE=ntopng
 make doctor
+make russian-ui
 make evidence
 make backup
 make down
@@ -126,6 +128,22 @@ scripts/doctor.sh
 ```
 
 Скрипт проверяет Docker, Compose, `.env`, Basic Auth, порт Nginx, наличие сервисов и HTTP-доступ к панели.
+
+## Русская локаль UI
+
+Проект добавляет опциональный файл `config/ntopng/locales/ru.lua`. Он переводит основные элементы интерфейса ntopng, а отсутствующие строки остаются на английском через штатный fallback. Для совместимости с фиксированным списком языков ntopng словарь подключается через поддерживаемый языковой слот.
+
+Включение:
+
+```bash
+make russian-ui
+```
+
+Для Docker Desktop:
+
+```bash
+USE_DESKTOP_OVERRIDE=1 make russian-ui
+```
 
 ## GeoLite2
 
