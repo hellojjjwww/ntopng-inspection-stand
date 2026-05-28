@@ -1,3 +1,5 @@
+limit_req_zone $binary_remote_addr zone=ntopng_ui:10m rate=20r/s;
+
 server {
     listen ${NGINX_LISTEN_PORT};
     server_name _;
@@ -5,7 +7,13 @@ server {
     auth_basic "ntopng";
     auth_basic_user_file /etc/nginx/.htpasswd;
 
+    client_max_body_size 16m;
+    limit_req zone=ntopng_ui burst=40 nodelay;
+
     proxy_http_version 1.1;
+    proxy_connect_timeout 10s;
+    proxy_send_timeout 60s;
+    proxy_read_timeout 60s;
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;

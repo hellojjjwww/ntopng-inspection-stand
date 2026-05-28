@@ -91,14 +91,42 @@ docker compose restart ntopng
 - nProbe как сенсор NetFlow/IPFIX и отдельное долговременное хранилище.
 - Экспорт алертов через webhook/syslog в SIEM.
 
-Бэкап volume:
+Бэкап конфигурации и volume:
 
 ```bash
-docker run --rm -v ntopng-inspection-stand_ntopng-data:/data -v "$PWD/backups:/backup" alpine tar czf /backup/ntopng-data.tgz -C /data .
-docker run --rm -v ntopng-inspection-stand_redis-data:/data -v "$PWD/backups:/backup" alpine tar czf /backup/redis-data.tgz -C /data .
+scripts/backup.sh
 ```
 
-## 7. Проверка reverse-proxy
+Архивы сохраняются в `artifacts/backups/<timestamp>/`.
+
+## 7. Диагностика и управление
+
+Быстрая проверка состояния:
+
+```bash
+scripts/doctor.sh
+```
+
+Команды управления:
+
+```bash
+make up
+make ps
+make logs SERVICE=ntopng
+make logs SERVICE=zeek
+make evidence
+make backup
+make down
+```
+
+После установки одной командой на Ubuntu создается unit:
+
+```bash
+systemctl status ntopng-inspection-stand.service
+systemctl restart ntopng-inspection-stand.service
+```
+
+## 8. Проверка reverse-proxy
 
 Проверьте, что прямой web-порт ntopng не доступен извне:
 
@@ -113,7 +141,7 @@ curl -I http://<linux-host>:3000/
 http://<linux-host>:8088/
 ```
 
-## 8. Контрольный сценарий проверки
+## 9. Контрольный сценарий проверки
 
 1. `docker compose ps` показывает `redis`, `ntopng`, `zeek`, `nginx`.
 2. В ntopng виден live-трафик на выбранном интерфейсе.
