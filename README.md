@@ -14,6 +14,9 @@
 - `install.sh` - установка стенда на Ubuntu LTS одной командой.
 - `scripts/generate_anomaly.py` - генератор SYN-flood, DNS-туннельных запросов и oversized ICMP.
 - `scripts/prepare_htpasswd.py` - создание файла Basic Auth.
+- `scripts/doctor.sh` - диагностика типовых ошибок запуска.
+- `scripts/backup.sh` - резервное копирование конфигурации и Docker volumes.
+- `Makefile` - короткие команды управления стендом.
 - `deploy/scripts/tests/validate_stack.sh` - интеграционная проверка запущенного стенда.
 - `docs/architecture.md` - архитектура NDR/DPI.
 - `docs/deployment.md` - инструкция развертывания.
@@ -48,6 +51,7 @@ sudo CAPTURE_INTERFACE=ens18 \
 ```
 
 Если `NGINX_BASIC_PASSWORD` не задан, установщик сгенерирует пароль и покажет его после запуска.
+При установке создается `systemd` unit `ntopng-inspection-stand.service`, чтобы стенд поднимался после перезагрузки сервера.
 
 ## Ручной запуск
 
@@ -95,6 +99,18 @@ docker compose -f deploy/docker-compose.yml logs -f ntopng
 docker compose -f deploy/docker-compose.yml logs -f zeek
 ```
 
+Короткие команды через `make`:
+
+```bash
+make up
+make ps
+make logs SERVICE=ntopng
+make doctor
+make evidence
+make backup
+make down
+```
+
 Интеграционный тест:
 
 ```bash
@@ -102,6 +118,14 @@ NGINX_BASIC_USER=ntopadmin \
 NGINX_BASIC_PASSWORD=<password> \
 deploy/scripts/tests/validate_stack.sh
 ```
+
+Диагностика типовых проблем:
+
+```bash
+scripts/doctor.sh
+```
+
+Скрипт проверяет Docker, Compose, `.env`, Basic Auth, порт Nginx, наличие сервисов и HTTP-доступ к панели.
 
 ## GeoLite2
 

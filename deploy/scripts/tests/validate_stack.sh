@@ -33,11 +33,14 @@ require_command() {
 }
 
 validate_containers() {
-    compose ps --format json >/dev/null
+    local service
+    for service in redis ntopng zeek nginx; do
+        compose ps --status running --services | grep -qx "${service}"
+    done
 }
 
 validate_zeek_service() {
-    compose ps zeek >/dev/null
+    compose ps --status running --services | grep -qx zeek
 }
 
 validate_unauthenticated_access() {
