@@ -9,7 +9,7 @@ else
 COMPOSE = docker compose -f $(COMPOSE_FILE)
 endif
 
-.PHONY: up down restart ps logs config test doctor evidence backup pull
+.PHONY: up down restart ps logs config test doctor evidence backup pull russian-ui
 
 up:
 	$(COMPOSE) up -d
@@ -43,3 +43,6 @@ backup:
 
 pull:
 	$(COMPOSE) pull
+
+russian-ui:
+	USE_DESKTOP_OVERRIDE=$(USE_DESKTOP_OVERRIDE) scripts/enable_russian_ui.sh

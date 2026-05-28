@@ -114,6 +114,7 @@ make up
 make ps
 make logs SERVICE=ntopng
 make logs SERVICE=zeek
+make russian-ui
 make evidence
 make backup
 make down
@@ -126,7 +127,23 @@ systemctl status ntopng-inspection-stand.service
 systemctl restart ntopng-inspection-stand.service
 ```
 
-## 8. Проверка reverse-proxy
+## 8. Русская локаль ntopng
+
+В проекте подключен дополнительный файл `config/ntopng/locales/ru.lua`. Он переводит основные пункты интерфейса. Полная локализация зависит от количества строк в словаре ntopng; отсутствующие строки остаются на английском. Для совместимости с фиксированным списком языков ntopng словарь подключается через поддерживаемый языковой слот.
+
+Включение:
+
+```bash
+scripts/enable_russian_ui.sh
+```
+
+Для Docker Desktop:
+
+```bash
+USE_DESKTOP_OVERRIDE=1 scripts/enable_russian_ui.sh
+```
+
+## 9. Проверка reverse-proxy
 
 Проверьте, что прямой web-порт ntopng не доступен извне:
 
@@ -141,7 +158,7 @@ curl -I http://<linux-host>:3000/
 http://<linux-host>:8088/
 ```
 
-## 9. Контрольный сценарий проверки
+## 10. Контрольный сценарий проверки
 
 1. `docker compose ps` показывает `redis`, `ntopng`, `zeek`, `nginx`.
 2. В ntopng виден live-трафик на выбранном интерфейсе.

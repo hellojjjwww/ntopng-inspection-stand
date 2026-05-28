@@ -26,12 +26,14 @@ jobs:
           bash -n scripts/setup_geolite2.sh
           bash -n scripts/doctor.sh
           bash -n scripts/backup.sh
+          bash -n scripts/enable_russian_ui.sh
 
       - name: Check required files
         run: |
           test -f LICENSE.txt
           test -f Makefile
           test -f config/zeek/local.zeek
+          test -f config/ntopng/locales/ru.lua
           test -f docs/deployment.md
           test -f docs/testing.md
           test -f docs/alerts.md
