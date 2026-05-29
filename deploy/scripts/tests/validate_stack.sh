@@ -1,12 +1,4 @@
 #!/usr/bin/env bash
-# @file validate_stack.sh
-# @brief Validate the local Docker Compose stack and HTTP access path.
-# @details
-#   1. Checks Docker Compose service state.
-#   2. Verifies that Nginx protects the UI with Basic Auth.
-#   3. Verifies that authenticated access reaches ntopng.
-# @version 1.0.0
-# @license MIT
 set -euo pipefail
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"

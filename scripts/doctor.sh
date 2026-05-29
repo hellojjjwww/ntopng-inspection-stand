@@ -1,8 +1,4 @@
 #!/usr/bin/env bash
-# @file doctor.sh
-# @brief Diagnose common deployment issues for the ntopng inspection stand.
-# @version 1.0.0
-# @license MIT
 set -u
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

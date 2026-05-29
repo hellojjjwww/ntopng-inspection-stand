@@ -1,13 +1,4 @@
 #!/usr/bin/env bash
-# @file setup_geolite2.sh
-# @brief Install and refresh GeoLite2 databases for ntopng GeoIP enrichment.
-# @details
-#   1. Installs geoipupdate when it is missing.
-#   2. Writes /etc/GeoIP.conf from environment variables.
-#   3. Downloads MaxMind GeoLite2 databases.
-#   4. Copies .mmdb files into the project geoip/ directory.
-# @version 1.0.0
-# @license MIT
 set -euo pipefail
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

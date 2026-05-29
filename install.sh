@@ -1,14 +1,4 @@
 #!/usr/bin/env bash
-# @file install.sh
-# @brief Bootstrap script for deploying the ntopng traffic inspection stand on Ubuntu LTS.
-# @details
-#   1. Validates the target operating system.
-#   2. Installs Docker Engine and Docker Compose plugin when missing.
-#   3. Downloads project configuration from the Git repository.
-#   4. Generates local runtime secrets outside Git.
-#   5. Enables a restrictive UFW policy and starts the container stack.
-# @version 1.1.0
-# @license MIT
 set -Eeuo pipefail
 
 REPO_RAW="${REPO_RAW:-https://raw.githubusercontent.com/hellojjjwww/ntopng-inspection-stand/main}"

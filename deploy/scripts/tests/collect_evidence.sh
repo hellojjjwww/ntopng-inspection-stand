@@ -1,12 +1,4 @@
 #!/usr/bin/env bash
-# @file collect_evidence.sh
-# @brief Collect runtime evidence for documentation and validation.
-# @details
-#   1. Stores Docker Compose service state.
-#   2. Stores recent ntopng, Zeek and Nginx logs.
-#   3. Stores short Zeek log samples when files are available.
-# @version 1.0.0
-# @license MIT
 set -euo pipefail
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
