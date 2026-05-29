@@ -1,10 +1,5 @@
 #!/usr/bin/env python3
-"""Build the PDF installation guide from the Markdown source.
-
-File: build_instruction_pdf.py
-Version: 1.0.0
-License: MIT
-"""
+"""Build the PDF installation guide from the Markdown source."""
 
 from __future__ import annotations
 

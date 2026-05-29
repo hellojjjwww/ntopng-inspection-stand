@@ -1,8 +1,4 @@
 #!/usr/bin/env bash
-# @file enable_russian_ui.sh
-# @brief Enable the optional Russian ntopng UI locale.
-# @version 1.0.0
-# @license MIT
 set -euo pipefail
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -19,9 +15,6 @@ compose() {
 }
 
 main() {
-  # ntopng exposes only a fixed list of language codes in the UI. The project
-  # mounts the Russian dictionary over one supported locale slot and keeps all
-  # missing strings covered by ntopng's standard English fallback.
   compose exec -T redis redis-cli set ntopng.user.admin.language it >/dev/null
   compose exec -T redis redis-cli set ntopng.user.nologin.language it >/dev/null
   compose restart ntopng >/dev/null

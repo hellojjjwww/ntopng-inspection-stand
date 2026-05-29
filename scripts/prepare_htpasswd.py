@@ -1,10 +1,5 @@
 #!/usr/bin/env python3
-"""Create config/nginx/.htpasswd from .env without external utilities.
-
-File: prepare_htpasswd.py
-Version: 1.1.0
-License: MIT
-"""
+"""Create config/nginx/.htpasswd from .env without external utilities."""
 
 from __future__ import annotations
 

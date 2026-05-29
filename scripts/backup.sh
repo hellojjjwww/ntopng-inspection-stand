@@ -1,8 +1,4 @@
 #!/usr/bin/env bash
-# @file backup.sh
-# @brief Create a portable backup of configuration and Docker volumes.
-# @version 1.0.0
-# @license MIT
 set -euo pipefail
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

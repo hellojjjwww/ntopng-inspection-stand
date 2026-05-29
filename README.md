@@ -51,7 +51,7 @@ sudo CAPTURE_INTERFACE=ens18 \
   bash <(curl -Ls https://raw.githubusercontent.com/hellojjjwww/ntopng-inspection-stand/main/install.sh)
 ```
 
-Если `NGINX_BASIC_PASSWORD` не задан, установщик сгенерирует пароль и покажет его после запуска.
+Если `NGINX_BASIC_PASSWORD` не задан, установщик создаст пароль и покажет его после запуска.
 При установке создается `systemd` unit `ntopng-inspection-stand.service`, чтобы стенд поднимался после перезагрузки сервера.
 
 ## Ручной запуск
