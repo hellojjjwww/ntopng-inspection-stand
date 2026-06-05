@@ -1,12 +1,17 @@
 COMPOSE_FILE ?= deploy/docker-compose.yml
 DESKTOP_COMPOSE_FILE ?= deploy/docker-compose.desktop.yml
+ENV_FILE ?= .env
 USE_DESKTOP_OVERRIDE ?= 0
 SERVICE ?=
 
+ifneq ($(wildcard $(ENV_FILE)),)
+COMPOSE_ENV = --env-file $(ENV_FILE)
+endif
+
 ifeq ($(USE_DESKTOP_OVERRIDE),1)
-COMPOSE = docker compose -f $(COMPOSE_FILE) -f $(DESKTOP_COMPOSE_FILE)
+COMPOSE = docker compose $(COMPOSE_ENV) -f $(COMPOSE_FILE) -f $(DESKTOP_COMPOSE_FILE)
 else
-COMPOSE = docker compose -f $(COMPOSE_FILE)
+COMPOSE = docker compose $(COMPOSE_ENV) -f $(COMPOSE_FILE)
 endif
 
 .PHONY: up down restart ps logs config test doctor evidence backup pull russian-ui

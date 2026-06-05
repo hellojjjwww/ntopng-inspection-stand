@@ -3,12 +3,18 @@ set -euo pipefail
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 COMPOSE_FILE="${PROJECT_ROOT}/deploy/docker-compose.yml"
+ENV_FILE="${PROJECT_ROOT}/.env"
 OUTPUT_DIR="${OUTPUT_DIR:-${PROJECT_ROOT}/artifacts/backups}"
 STAMP="$(date +%Y%m%d-%H%M%S)"
 BACKUP_DIR="${OUTPUT_DIR}/${STAMP}"
 
 compose() {
-  docker compose -f "${COMPOSE_FILE}" "$@"
+  local args=()
+  if [[ -f "${ENV_FILE}" ]]; then
+    args+=(--env-file "${ENV_FILE}")
+  fi
+  args+=(-f "${COMPOSE_FILE}")
+  docker compose "${args[@]}" "$@"
 }
 
 backup_config() {

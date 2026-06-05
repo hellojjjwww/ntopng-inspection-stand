@@ -29,11 +29,15 @@ fail() {
 }
 
 compose() {
-  if [[ "${USE_DESKTOP_OVERRIDE}" == "1" ]]; then
-    docker compose -f "${COMPOSE_FILE}" -f "${DESKTOP_COMPOSE_FILE}" "$@"
-  else
-    docker compose -f "${COMPOSE_FILE}" "$@"
+  local args=()
+  if [[ -f "${ENV_FILE}" ]]; then
+    args+=(--env-file "${ENV_FILE}")
   fi
+  args+=(-f "${COMPOSE_FILE}")
+  if [[ "${USE_DESKTOP_OVERRIDE}" == "1" ]]; then
+    args+=(-f "${DESKTOP_COMPOSE_FILE}")
+  fi
+  docker compose "${args[@]}" "$@"
 }
 
 load_env() {

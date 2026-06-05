@@ -21,6 +21,7 @@ jobs:
       - name: Validate Bash syntax
         run: |
           bash -n install.sh
+          bash -n install-vps-wireguard.sh
           bash -n deploy/scripts/tests/validate_stack.sh
           bash -n deploy/scripts/tests/collect_evidence.sh
           bash -n scripts/setup_geolite2.sh

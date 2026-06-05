@@ -4,14 +4,19 @@ set -euo pipefail
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 COMPOSE_FILE="${PROJECT_ROOT}/deploy/docker-compose.yml"
 DESKTOP_COMPOSE_FILE="${PROJECT_ROOT}/deploy/docker-compose.desktop.yml"
+ENV_FILE="${PROJECT_ROOT}/.env"
 USE_DESKTOP_OVERRIDE="${USE_DESKTOP_OVERRIDE:-0}"
 
 compose() {
-  if [[ "${USE_DESKTOP_OVERRIDE}" == "1" ]]; then
-    docker compose -f "${COMPOSE_FILE}" -f "${DESKTOP_COMPOSE_FILE}" "$@"
-  else
-    docker compose -f "${COMPOSE_FILE}" "$@"
+  local args=()
+  if [[ -f "${ENV_FILE}" ]]; then
+    args+=(--env-file "${ENV_FILE}")
   fi
+  args+=(-f "${COMPOSE_FILE}")
+  if [[ "${USE_DESKTOP_OVERRIDE}" == "1" ]]; then
+    args+=(-f "${DESKTOP_COMPOSE_FILE}")
+  fi
+  docker compose "${args[@]}" "$@"
 }
 
 main() {

@@ -1,94 +1,122 @@
 # Технический отчет
 
+## Стенд глубокого мониторинга сетевого трафика: ntopng / Zeek
+
+**Проект 25.** Анализ и глубокий мониторинг сетевого трафика.
+
+**Участники:** Якушенко Илья Дмитриевич; Бокова Елизавета Игоревна; Пикуза Софья Романовна.
+
 ## 1. Введение
 
-Тема проекта: анализ и глубокий мониторинг сетевого трафика на базе ntopng и Zeek.
+Современная сеть генерирует большое количество событий, которые невозможно надежно анализировать только по журналам конечных узлов. Для контроля инцидентов требуется наблюдение за сетевыми потоками, классификация прикладных протоколов, фиксация DNS- и TLS-метаданных, а также понятный интерфейс для оперативного просмотра состояния канала.
 
-Цель работы: разработать воспроизводимый стенд сетевой инспекции, обеспечивающий захват трафика, классификацию протоколов, фиксацию сетевых потоков, выявление аномалий и сохранение структурированных логов.
+Цель проекта - разработать воспроизводимый стенд сетевой инспекции, который разворачивается на Ubuntu LTS, работает в Docker, захватывает трафик с реального или виртуального интерфейса, показывает карту сетевых потоков в ntopng и сохраняет доказательные логи Zeek.
 
-## 2. Постановка Задачи
+## 2. Постановка задачи
 
-Основные задачи:
+Проект реализует требования варианта 25: ntopng и Redis в Docker; packet capture через интерфейс хоста; DPI на базе nDPI; политики выявления аномалий; хранение flows и логов; GeoLite2; Nginx Basic Auth; Python/scapy-тесты.
 
-- развернуть ntopng и Redis в Docker;
-- настроить захват пакетов с интерфейса хоста;
-- включить DPI-классификацию на базе nDPI;
-- добавить политики выявления аномалий;
-- обеспечить хранение статистики flows и логов;
-- закрыть административный интерфейс через Nginx Basic Auth;
-- добавить проверочные сценарии на базе scapy.
+| Требование | Реализация |
+| --- | --- |
+| ntopng + Redis в Docker | `deploy/docker-compose.yml`, сервисы `ntopng` и `redis` |
+| Захват пакетов | `network_mode: host`, `CAPTURE_INTERFACE`, libpcap/PF_RING fallback |
+| DPI | nDPI внутри ntopng |
+| Аномалии | ntopng alerts, behavioural checks, Scapy tests |
+| Flows и логи | Docker volumes `ntopng-data`, `redis-data`, `zeek-logs` |
+| GeoIP | каталог `geoip/`, helper `scripts/setup_geolite2.sh` |
+| Reverse-proxy | Nginx Basic Auth, `--disable-login 1` |
+| Установка одной командой | `install.sh`, `install-vps-wireguard.sh` |
 
-## 3. Анализ Существующих Решений
+## 3. Анализ существующих решений
 
-Сравниваемые подходы:
+Рассмотрены tcpdump/Wireshark, ntopng, Zeek, Suricata и системы долгосрочного хранения. Итоговый стек выбран как комбинация ntopng и Zeek: ntopng дает визуализацию и DPI, Zeek формирует структурированные журналы для расследования.
 
-- ntopng как визуальный анализатор flows и DPI;
-- Zeek как источник структурированных сетевых логов;
-- Suricata как перспективный IDS-сенсор для сигнатурного анализа.
+tcpdump и Wireshark полезны для ручного анализа отдельных дампов, однако они не дают постоянной web-панели и не решают задачу автоматического накопления статистики. Suricata эффективна как IDS-сенсор с сигнатурными правилами, но в рамках проекта важна не только сигнатурная фиксация, а еще и визуализация сетевых потоков. Поэтому Suricata оставлена как перспективное расширение.
 
-Итоговый стек выбран как комбинация ntopng и Zeek: ntopng обеспечивает удобную визуализацию и алерты, Zeek формирует доказательные JSON-логи для дальнейшего анализа.
+| Решение | Сильная сторона | Ограничение | Использование |
+| --- | --- | --- | --- |
+| tcpdump/Wireshark | точный packet analysis | ручная работа | дополнительная диагностика |
+| ntopng | flows, DPI, dashboards, alerts | часть функций зависит от редакции | основная панель |
+| Zeek | структурированные сетевые логи | нужен отдельный анализ | доказательная база |
+| Suricata | IDS-сигнатуры, EVE JSON | усложняет минимальный стенд | развитие проекта |
+| OpenSearch/ClickHouse/Loki | долгосрочный поиск | требует отдельной инфраструктуры | развитие проекта |
 
 ## 4. Архитектура
 
-Компоненты стенда:
+```text
+network interface / mirror port / wg0
+        |
+        +--> ntopng --> nDPI --> flows, hosts, protocols, alerts
+        |       |
+        |       +--> Redis and ntopng-data volume
+        |
+        +--> Zeek --> conn/dns/http/ssl logs --> zeek-logs volume
 
-- ntopng;
-- Redis;
-- Zeek;
-- Nginx;
-- Docker Compose;
-- scapy-тесты.
+user browser --> Nginx Basic Auth --> ntopng UI
+```
 
-Сетевая схема: пассивный захват трафика с интерфейса Linux-хоста через `network_mode: host`.
+Архитектура построена как пассивный pipeline. ntopng отвечает за оперативное наблюдение: интерфейсы, hosts, live flows, applications, bandwidth, alerts и GeoIP. Redis используется как оперативное хранилище ntopng. Zeek параллельно пишет журналы `conn.log`, `dns.log`, `ssl.log`, `http.log`, которые можно использовать для проверки выводов из панели.
 
-## 5. Развертывание
+В обычной локальной сети стенд подключается к mirror/SPAN-порту либо к интерфейсу Linux-хоста. В демонстрационном режиме без SPAN/TAP используется WireGuard full tunnel: тестовый клиент подключается к VPS, а его трафик проходит через `wg0`.
 
-Быстрый запуск:
+## 5. Реализация
+
+Сервисы описаны в Docker Compose. Для анализаторов используется `network_mode: host`, capabilities `NET_ADMIN` и `NET_RAW`, healthcheck и Docker volumes. Nginx закрывает панель Basic Auth, а встроенная форма ntopng отключена параметром `--disable-login 1`.
+
+Основные файлы:
+
+- `deploy/docker-compose.yml` - Redis, ntopng, Zeek, Nginx;
+- `config/ntopng/ntopng.conf` - параметры ntopng;
+- `config/nginx/default.conf.template` - reverse-proxy;
+- `config/zeek/local.zeek` - политика Zeek для JSON-логов;
+- `scripts/generate_anomaly.py` - генерация тестовых аномалий;
+- `scripts/doctor.sh` - диагностика типовых проблем;
+- `docs/compliance_checklist.md` - проверка соответствия требованиям.
+
+## 6. Развертывание
 
 ```bash
 sudo bash <(curl -Ls https://raw.githubusercontent.com/hellojjjwww/ntopng-inspection-stand/main/install.sh)
+sudo bash <(curl -fsSL https://raw.githubusercontent.com/hellojjjwww/ntopng-inspection-stand/main/install-vps-wireguard.sh)
 ```
 
-Ручной запуск:
+После установки проверяются контейнеры, WireGuard при необходимости, Nginx Basic Auth и доступность ntopng. Установщик VPS demo дополнительно выводит путь к клиентскому WireGuard config и команду `scp` для скачивания.
 
-```bash
-cp .env.example .env
-python3 scripts/prepare_htpasswd.py
-docker compose -f deploy/docker-compose.yml up -d
-```
+## 7. Тестирование
 
-## 6. Тестирование
-
-Статическая проверка:
+Проверяются Docker Compose, Bash/Python syntax, доступность Nginx/Basic Auth, наличие логов Zeek и появление flows в ntopng. Для лабораторной генерации аномалий используется `scripts/generate_anomaly.py`.
 
 ```bash
 docker compose -f deploy/docker-compose.yml config --quiet
 bash -n install.sh
+bash -n install-vps-wireguard.sh
 python3 -m py_compile scripts/generate_anomaly.py scripts/prepare_htpasswd.py
-```
-
-Интеграционная проверка:
-
-```bash
 deploy/scripts/tests/validate_stack.sh
-```
-
-Генерация аномального трафика:
-
-```bash
 sudo python3 scripts/generate_anomaly.py suspicious-dns --resolver 1.1.1.1 --domain lab.example --count 100
 ```
 
-## 7. Результаты
+## 8. Результаты
 
-Ожидаемые результаты:
+Стенд показывает live flows, hosts, applications, bandwidth, alerts, behavioural checks и GeoIP-карту. Скриншоты интерфейса находятся в `assets/screenshots/`.
 
-- ntopng отображает flows, hosts, protocols и bandwidth;
-- Zeek формирует `conn.log`, `dns.log`, `ssl.log`, `http.log`;
-- Nginx ограничивает доступ к web-интерфейсу;
-- scapy-тесты создают наблюдаемые сетевые события;
-- GeoIP-базы позволяют обогащать внешние IP-адреса.
+Демонстрационный сценарий:
 
-## 8. Заключение
+1. Развернуть стенд на Ubuntu LTS или VPS.
+2. Подключить клиент через WireGuard.
+3. Открыть несколько сайтов и выполнить DNS-запросы.
+4. Открыть ntopng и показать dashboard, flows, hosts, interface, alerts.
+5. Подтвердить события через Zeek logs.
 
-Разработанный стенд обеспечивает воспроизводимое развертывание системы сетевой инспекции и может использоваться для анализа сетевых потоков, проверки политик обнаружения и подготовки материалов по мониторингу Linux-инфраструктуры.
+## 9. Роли
+
+- Якушенко Илья Дмитриевич - архитектура, Docker Compose, установщики, WireGuard demo, ntopng/Zeek, тестирование аномалий.
+- Бокова Елизавета Игоревна - Nginx, Basic Auth, Redis, healthcheck, эксплуатационные процедуры.
+- Пикуза Софья Романовна - документация, сценарий демонстрации, чек-листы, презентационные материалы.
+
+## 10. Развитие
+
+Перспективы: Suricata IDS, ClickHouse/OpenSearch/Loki, webhook/syslog-алерты, Prometheus/Grafana, несколько WireGuard-клиентов, nProbe/NetFlow.
+
+## 11. Заключение
+
+Проект реализует воспроизводимый стенд сетевой инспекции и может использоваться для демонстрации анализа flows, DPI, алертинга и журналирования сетевых событий.

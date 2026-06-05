@@ -25,14 +25,15 @@
 - `docs/operations.md` - эксплуатационные процедуры.
 - `docs/alerts.md` - базовые политики алертинга.
 - `docs/demo_scenario.md` - практический сценарий демонстрации.
+- `docs/compliance_checklist.md` - чек-лист соответствия требованиям проекта.
 
 ## Роли
 
-| Роль | Зона ответственности |
-| --- | --- |
-| DevOps/IaC Engineer | Docker Compose, установщик, структура репозитория, автоматизация развертывания |
-| System Administrator / SRE | Nginx, Redis, healthcheck-и, эксплуатационные процедуры |
-| Observability and Security Engineer | ntopng, DPI, алерты, тесты аномального трафика, документация мониторинга |
+| Участник | Роль | Зона ответственности |
+| --- | --- | --- |
+| Якушенко Илья Дмитриевич | DevOps/IaC Engineer, Observability and Security Engineer | Docker Compose, installer, WireGuard VPS demo, ntopng/Zeek, DPI, алертинг, тестирование аномалий |
+| Бокова Елизавета Игоревна | System Administrator / SRE | Nginx reverse-proxy, Basic Auth, Redis, healthcheck, эксплуатационные процедуры и проверка доступности |
+| Пикуза Софья Романовна | Documentation and QA Engineer | README, сценарий демонстрации, чек-листы, презентационные материалы, контроль соответствия критериям |
 
 ## Установка одной командой
 
@@ -53,6 +54,35 @@ sudo CAPTURE_INTERFACE=ens18 \
 
 Если `NGINX_BASIC_PASSWORD` не задан, установщик создаст пароль и покажет его после запуска.
 При установке создается `systemd` unit `ntopng-inspection-stand.service`, чтобы стенд поднимался после перезагрузки сервера.
+
+## VPS demo через WireGuard
+
+Для демонстрации без SPAN/TAP и без изменения локальной сети доступен режим VPS demo. Тестовый клиент подключается к VPS по WireGuard, весь его трафик проходит через интерфейс `wg0`, а `ntopng` и `Zeek` анализируют этот поток.
+
+Топология:
+
+```text
+Test client -> WireGuard tunnel -> VPS wg0 -> ntopng / Zeek -> Internet
+```
+
+Установка на чистой Ubuntu LTS одной командой:
+
+```bash
+sudo bash <(curl -fsSL https://raw.githubusercontent.com/hellojjjwww/ntopng-inspection-stand/main/install-vps-wireguard.sh)
+```
+
+В процессе установки скрипт предлагает задать собственный логин и пароль для панели. Если оставить стандартный режим, будет создан случайный пароль для пользователя `ntopadmin`.
+
+После установки выводятся:
+
+- URL панели `ntopng`;
+- логин и пароль Basic Auth;
+- путь к WireGuard client config;
+- путь для скачивания через Termius/SFTP;
+- готовая команда `scp`;
+- тестовый WireGuard client config для копирования.
+
+Подробности приведены в `docs/wireguard_vps_demo.md`.
 
 ## Ручной запуск
 
